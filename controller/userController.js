@@ -6566,7 +6566,8 @@ exports.getPurchaseGoodsMatchedDataUsingPayloadId = async (req, res) => {
     } else {
       "no status"
       // ✅ No filtering or pagination — fetch all
-      purchaseGoodMatched = await purchase_goods_matched_items_ai_by_payload_id_and_status_paginated(purchase_payload_id,null, page, limit);
+      const { data, totalCount }= await purchase_goods_matched_items_ai_by_payload_id_and_status_paginated(purchase_payload_id,null, page, limit);
+      purchaseGoodMatched = data;
       total = totalCount;
     }
 

@@ -436,21 +436,42 @@ module.exports = {
     },
 
     purchase_goods_matched_items_ai_by_payload_id_and_status_paginated :async(payload_id, status, page, limit)=> {
-        const offset = (page - 1) * limit;
-      
-        const data = await db.query(`
-          SELECT * FROM purchase_goods_matched_items_ai
-          WHERE purchase_payload_id = ? AND status = ?
-          LIMIT ? OFFSET ?
-        `, [Number(payload_id), Number(status), Number(limit), Number(offset)]);
-      
-        const  [{totalCount}]  = await db.query(`
-          SELECT COUNT(*) AS totalCount
-          FROM purchase_goods_matched_items_ai
-          WHERE purchase_payload_id = ? AND status = ?
-        `, [Number(payload_id), Number(status)]);
-        return { data, totalCount }
-      }
+        if(status == null){
+            const offset = (page - 1) * limit;
+          
+            const data = await db.query(`
+              SELECT * FROM purchase_goods_matched_items_ai
+              WHERE purchase_payload_id = ?
+              LIMIT ? OFFSET ?
+            `, [Number(payload_id),  Number(limit), Number(offset)]);
+          
+            const  [{totalCount}]  = await db.query(`
+              SELECT COUNT(*) AS totalCount
+              FROM purchase_goods_matched_items_ai
+              WHERE purchase_payload_id = ? 
+            `, [Number(payload_id)]);
+            console.log(totalCount);
+            return { data, totalCount }
+          }
+        else{
+            const offset = (page - 1) * limit;
+          
+            const data = await db.query(`
+              SELECT * FROM purchase_goods_matched_items_ai
+              WHERE purchase_payload_id = ? AND status = ?
+              LIMIT ? OFFSET ?
+            `, [Number(payload_id), Number(status), Number(limit), Number(offset)]);
+          
+            const  [{totalCount}]  = await db.query(`
+              SELECT COUNT(*) AS totalCount
+              FROM purchase_goods_matched_items_ai
+              WHERE purchase_payload_id = ? AND status = ?
+            `, [Number(payload_id), Number(status)]);
+            console.log(totalCount);
+            return { data, totalCount }
+          }
+
+        }
       
 
 }
