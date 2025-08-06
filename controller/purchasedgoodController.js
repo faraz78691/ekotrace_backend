@@ -892,6 +892,168 @@ exports.bulkPurchaseGoodsUpload = async (req, res) => {
     });
   }
 };
+exports.bulkPurchaseGoodsUploadAIMatched = async (req, res) => {
+  try {
+    const { facilities, purchasePayloadId, is_annual, productcodestandard, tenant_id, super_tenant_id } = req.body;
+    
+    const schema = Joi.object({
+      facilities: Joi.string().allow('').required(),
+      purchasePayloadId: Joi.number().required(),
+      is_annual: Joi.string().allow('').required(),
+      productcodestandard: Joi.string().allow('').required(),
+      tenant_id: Joi.number().required(),
+      super_tenant_id: Joi.number().required(),
+      file: Joi.string().optional()
+    });
+    const result = schema.validate(req.body);
+    if (result.error) {
+      const message = result.error.details.map((i) => i.message).join(",");
+      return res.json({
+        message: result.error.details[0].message,
+        error: message,
+        missingParams: result.error.details[0].message,
+        status: 200,
+        success: false,
+      });
+    } else {
+      const user_id = req.user.user_id;
+     
+
+      let countrydata = await country_check(facilities);
+      if (countrydata.length == 0) {
+        return res.json({
+          success: false,
+          message: "EF not Found for this country",
+          status: 400,
+        });
+      }
+
+      const getMatchItems = await getData('purchase_goods_matched_items_ai', `where purchase_payload_id = ${purchasePayloadId} AND match_productCategory_Id IS NOT NULL AND match_productCategory_Id REGEXP '^[0-9]+$' `);
+      console.log("getMatchItems",getMatchItems.length); ;
+      let data = getMatchItems;
+      let array = [];
+      if (data?.length > 0) {
+     
+        const chunkSize = 500;
+        
+        for (let i = 0; i < data.length; i += chunkSize) {
+          const chunk = data.slice(i, i + chunkSize);
+        
+          const batchResults = await Promise.all(chunk.map(async (item) => {
+            if (item.status != 1) return null;
+        
+            let emission = '';
+            let EFVRes;
+        
+            const parsedDate = moment(item.purchase_date, "DD-MM-YYYY");
+            item.year = parsedDate.year();
+            item.month = parsedDate.format("MMM");
+        
+            if (!item.vendor_name && !item.vendor_ef) {
+              EFVRes = await fetchPurchaseGoodDataBulk(item.product_name, countrydata[0].CountryId, item.year);
+            } else {
+              const findVendor = await findVendorByName(item.vendor_name, super_tenant_id);
+              let vendorId;
+              if (findVendor.length > 0) {
+                vendorId = findVendor[0].id;
+              } else {
+                const now = new Date();
+                const yearMonth = now.getFullYear().toString() + String(now.getMonth() + 1).padStart(2, '0');
+                const uniqueNumber = yearMonth + Math.floor(1000 + Math.random() * 9000);
+                const vendorInsert = await addVendorName(item.vendor_name, uniqueNumber, super_tenant_id, countrydata[0].CountryId);
+                vendorId = vendorInsert.insertId;
+              }
+              item.vendorId = vendorId;
+        
+              EFVRes = await fetchPurchaseGoodDataBulk(item.product_name, countrydata[0].CountryId, item.year);
+            }
+        
+            if (EFVRes.length > 0) {
+              item.typeofpurchase = EFVRes[0]?.typeofpurchase;
+              item.product_category = EFVRes[0]?.id;
+        
+              if (item.unit === 'Kg') {
+                emission = !item.vendor_ef ? EFVRes[0]?.EFkgC02e_kg : item.vendor_ef;
+              } else if (item.unit === 'Tonnes') {
+                emission = !item.vendor_ef ? EFVRes[0]?.EFkgC02e_tonnes : item.vendor_ef;
+              } else if (item.unit === 'Litres') {
+                emission = !item.vendor_ef ? EFVRes[0]?.EFkgC02e_litres : item.vendor_ef;
+              } else {
+                emission = !item.vendor_ef ? EFVRes[0]?.EFkgC02e_ccy : item.vendor_ef;
+              }
+            }
+        
+            let productcode = '';
+          
+            if (is_annual === '0' && item.month !== 'Invalid date') {
+              const rowData = {
+                typeofpurchase: item.typeofpurchase || "",
+                product_category: item.product_category || "",
+                is_annual: is_annual || "",
+                productcodestandard: productcodestandard || "",
+                productcode: item.productcode || "",
+                valuequantity: item.value || "",
+                unit: item.unit || "",
+                vendor_id: item.vendorId || null,
+                supplier: item.vendor_name || null,
+                supplierspecificEF: item.vendor_ef || null,
+                supplierunit: item.vendorunit || "",
+                emission: emission ? (emission * item.value) : 0,
+                emission_factor_used: emission || 0,
+                FileName: req.file?.filename || null,
+                user_id: user_id,
+                status: 'P',
+                facilities: facilities,
+                year: item.year,
+                month: item.month
+              };
+              return rowData;
+            }
+        
+            return null;
+          }));
+        console.log(batchResults,"batchResults");
+          // Add non-null rows to final array
+          array.push(...batchResults.filter(row => row !== null));
+          
+        }
+        
+      }else{
+        return res.json({
+          message: "Match data not found",
+          status: 400,
+          success: false,
+        });
+      }
+console.log("array2323",array);
+    
+
+      if (array.length > 0) {
+        console.log(array);
+        const datainfo = await uplaodTemplate(array);
+        return res.json({
+          message: "Data inserted successfully.",
+          status: 200,
+          success: true,
+        });
+      } else {
+        return res.json({
+          message: "data not found",
+          status: 400,
+          success: false,
+        });
+      }
+    }
+  } catch (err) {
+    console.log(err);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error " + err.message,
+      error: true
+    });
+  }
+};
 
 // exports.downStreamTransportation = async (req, res) => {
 //   try {

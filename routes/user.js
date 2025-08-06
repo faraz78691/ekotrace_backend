@@ -135,6 +135,7 @@ router.get('/download-excel-vehicle-fleet-by-facility-category-id', auth, userCo
 router.post('/add-purchase-goods-match-unmatch-data', auth, userController.addPurchaseGoodsMatchUnmatch);
 router.post('/get-purchase-good-data-using-user-facilityId', auth, userController.getPurchaseGoodsByUserAndFacilityId);
 router.post('/get-purchase-good-matched-data-using-payload-id', auth, userController.getPurchaseGoodsMatchedDataUsingPayloadId);
+router.post('/updatePurchaseGoodsMAtchId', auth, userController.updatePurchaseGoodsMAtchId);
 router.post('/deleteAllEntry', auth, userController.deleteAllEntry);
 router.post('/rejectAllEntry', auth, userController.rejectAllEntry);
 

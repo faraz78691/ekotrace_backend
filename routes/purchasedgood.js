@@ -27,6 +27,7 @@ router.post("/calculateInvestmentEmission", auth, purchasedgoodController.calcul
 router.get("/getInvestmentEmission", auth, purchasedgoodController.getInvestmentEmission);
 router.post("/purchaseGoods", auth, upload.single('file'), purchasedgoodController.purchaseGoods);
 router.post("/bulk-purchase-goods-upload", auth, upload.single('file'), purchasedgoodController.bulkPurchaseGoodsUpload);
+router.post("/bulkPurchaseGoodsUploadAIMatched", auth, upload.single('file'), purchasedgoodController.bulkPurchaseGoodsUploadAIMatched);
 router.get("/getpurchaseproduct_code", auth, purchasedgoodController.getpurchaseproduct_code);
 router.get("/getTypesofpurchase/:product_code_id", auth, purchasedgoodController.getTypesofpurchase);
 router.post("/purchaseGoodsAllcategories", auth, purchasedgoodController.purchaseGoodsAllcategories);

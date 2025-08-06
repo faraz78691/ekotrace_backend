@@ -6564,7 +6564,7 @@ exports.getPurchaseGoodsMatchedDataUsingPayloadId = async (req, res) => {
       purchaseGoodMatched = data;
       total = totalCount;
     } else {
-      "no status"
+      
       // ✅ No filtering or pagination — fetch all
       const { data, totalCount }= await purchase_goods_matched_items_ai_by_payload_id_and_status_paginated(purchase_payload_id,null, page, limit);
       purchaseGoodMatched = data;
@@ -6577,6 +6577,7 @@ exports.getPurchaseGoodsMatchedDataUsingPayloadId = async (req, res) => {
           const [productResult] = await purchase_goods_categories_ef_by_match_productCategory_Id(val.match_productCategory_Id);
           const data = {
             "S. No.": (status === 1 ? (page - 1) * limit : 0) + index + 1,
+            "id": val.id,
             "Product Category": val.product_category,
             "Product Description": val.product_description,
             "Purchase Date": val.purchase_date,
@@ -6588,7 +6589,7 @@ exports.getPurchaseGoodsMatchedDataUsingPayloadId = async (req, res) => {
             "KG": "",
             "kg CO2e / kg": ""
           };
-          return { ...data, productResult, is_find: true };
+          return { ...data, productResult, is_find: val.status === 1 ? true : false };
         })
       );
 
@@ -6605,9 +6606,9 @@ exports.getPurchaseGoodsMatchedDataUsingPayloadId = async (req, res) => {
         
       });
     } else {
-      return res.status(404).json({
+      return res.status(200).json({
         success: false,
-        message: "No matched data found",
+        message: `No ${status === 1 ? "matched" : "unmatched"} data found`,
         data: [],
         ...(status === 1 && {
           pagination: {
@@ -6619,6 +6620,50 @@ exports.getPurchaseGoodsMatchedDataUsingPayloadId = async (req, res) => {
         })
       });
     }
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: true,
+      message: "Internal server error: " + error.message,
+      success: false
+    });
+  }
+};
+exports.updatePurchaseGoodsMAtchId = async (req, res) => {
+  try {
+    const { id, matchedId,matchProductName  } = req.body;
+
+    const schema = Joi.object({
+      id: Joi.string().required(),
+      matchedId: Joi.string().required(),
+      matchProductName: Joi.string().required()
+    });
+
+    const result = schema.validate({ id, matchedId,matchProductName  });
+    if (result.error) {
+      return res.status(400).json({
+        message: result.error.details[0].message,
+        status: 400,
+        success: false,
+      });
+    }
+
+    let purchaseGoodMatched = {
+      match_productCategory_Id: matchedId,
+      product_name: matchProductName,
+      status: 1
+    };
+
+    let where = ` where id = '${id}'`;
+    const updatevendor = await updateData(`purchase_goods_matched_items_ai`, where, purchaseGoodMatched);
+    return res.status(200).json({
+      success: true,
+      message: "Matched data updated successfully",
+      data: updatevendor,
+    });
+ 
+
+  
   } catch (error) {
     console.log(error);
     return res.status(500).json({

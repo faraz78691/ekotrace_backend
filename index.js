@@ -70,7 +70,7 @@ app.get("/server", (req, res) => {
 });
 
 // ✅ Listen on port
-const PORT = 3000;
+const PORT = 4000;
 app.listen(PORT, function () {
   console.log(`Node app is running on port ${PORT}`);
 });
