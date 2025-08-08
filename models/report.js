@@ -15,9 +15,27 @@ module.exports = {
                      pgc.emission as Emission,  pgc.year as Years, pgc.month as Months, pgc.supplier as vendor, pgc.supplierspecificEF as vendor_ef, pgc.supplierunit as vendor_ef_unit, pgc.valuequantity as quantity \
                      from  purchase_goods_categories pgc,   \`dbo.typesofpurchase\`   top,  \`dbo.tenants\` dbu,  \
                      purchase_goods_categories_ef pgcef where  pgc.year =${year} and pgc.month in (${month}) and pgc.status ='S'  \
-                      and pgc.productcode = pgcef.HSN_code and pgc.facilities in (${facility}) and dbu.id= pgc.user_id \
+                       and pgc.facilities in (${facility}) and dbu.id= pgc.user_id \
                      and pgc.product_category = pgcef.id  and top.id = pgc.typeofpurchase ORDER BY pgc.created_at ASC LIMIT ${pageSize} OFFSET ${offset}`);
   },
+  getPurchaseGoodsReportCount: async (
+    facility,
+    year,
+    month,
+  ) => {
+    return db.query(`SELECT COUNT(*) AS total FROM purchase_goods_categories pgc WHERE pgc.year = ${year} AND pgc.month IN (${month})AND pgc.status = 'S' AND pgc.facilities IN (${facility})`);
+  },
+
+  getSingleReportCount: async (
+    facility,
+    year,
+    monthCondition,
+    table_name,
+    facility_column_name
+  ) => {
+    return db.query(`SELECT COUNT(*) AS total FROM ${table_name}  WHERE year = ${year} AND ${monthCondition} AND status = 'S' AND ${facility_column_name} IN (${facility})`);
+  },
+  
 
   getDownStreamVehicleReport: async (
     user_id,
@@ -78,6 +96,7 @@ module.exports = {
     return db.query(`select f.SubCategoriesID as category_id, f.TypeName as subcategory, f.ReadingValue as quantity,f.Unit as  unit ,f.GHGEmission as emission, f.facility_id as facility, f.year, f.month, f.BlendType, f.BlendPercent, dbu.tenantName as user_name \
                     from  stationarycombustionde f,\`dbo.tenants\` dbu  where  dbu.id= f.user_id and f.status  ='S'  and f.facility_id ='${facility}' and f.year ='${year}' and f.month IN(${month}) ORDER BY f.SubmissionDate ASC LIMIT ${pageSize} OFFSET ${offset}`);
   },
+
 
   getCategoryBySeedId: async (id) => {
     return db.query("select item from subcategoryseeddata where id = ?", [id]);
@@ -313,7 +332,7 @@ module.exports = {
   },
 
   getVehicle: async (id) => {
-    return db.query("select item from \`companyownedvehicles\` where ID = ?", [
+    return db.query("select item, ItemType from \`companyownedvehicles\` where ID = ?", [
       id,
     ]);
   },

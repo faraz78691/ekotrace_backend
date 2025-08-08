@@ -1422,6 +1422,7 @@ exports.ScopewiseEmssion = async (req, res) => {
           ...categorydata20,
           ...categorydata21,
         ];
+       
         if (array3) {
           await Promise.all(
             array3.map(async (item) => {
@@ -5312,6 +5313,7 @@ exports.financedashboardemission = async (req, res) => {
         missingParams: result.error.details[0].message,
         status: 200,
         success: false,
+        
       });
     } else {
       let array3 = [];
