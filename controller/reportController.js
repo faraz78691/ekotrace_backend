@@ -259,6 +259,14 @@ exports.reportDownStreamVehicles = async (req, res) => {
 
     const offset = (pageNo - 1) * pageSize;
     const user_id = req.user.user_id;
+    const monthsCondition = `month in (${month})`;
+    const [totalCount] = await getSingleReportCount(
+      facility,
+      year,
+      monthsCondition,
+      "downstream_vehicle_storage_emissions",
+      "facility_id"
+    )
     const reportResult = await getDownStreamVehicleReport(
       user_id,
       facility,
@@ -273,6 +281,7 @@ exports.reportDownStreamVehicles = async (req, res) => {
         status: 200,
         message: "The report fetched succesfully",
         result: reportResult,
+        totalCount : totalCount.total || 0
       });
     } else {
       return res.json({
@@ -280,6 +289,7 @@ exports.reportDownStreamVehicles = async (req, res) => {
         status: 400,
         message: "No Data Found",
         result: reportResult,
+        totalCount : totalCount.total || 0
       });
     }
   } catch (err) {
@@ -397,6 +407,14 @@ exports.reportFranchiseEmission = async (req, res) => {
     const offset = (pageNo - 1) * pageSize;
 
     const user_id = req.user.user_id;
+    const monthsCondition = `month in (${month})`;
+    const [totalCount] = await getSingleReportCount(
+      facility,
+      year,
+      monthsCondition,
+      "franchise_categories_emission",
+      "facility_id"
+    )
     const reportResult = await getFranchiseEmissionReport(
       user_id,
       facility,
@@ -411,6 +429,7 @@ exports.reportFranchiseEmission = async (req, res) => {
         status: 200,
         message: "The report fetched succesfully",
         result: reportResult,
+        totalCount : totalCount.total || 0
       });
     } else {
       return res.json({
@@ -418,6 +437,7 @@ exports.reportFranchiseEmission = async (req, res) => {
         status: 400,
         message: "No Data Found",
         result: reportResult,
+        totalCount : totalCount.total || 0
       });
     }
   } catch (err) {
@@ -620,6 +640,14 @@ exports.reportUpstreamLeaseEmission = async (req, res) => {
 
     const offset = (pageNo - 1) * pageSize;
     const user_id = req.user.user_id;
+    const monthsCondition = `month in (${month})`;
+    const [totalCount] = await getSingleReportCount(
+      facility,
+      year,
+      monthsCondition,
+      "upstreamLease_emission",
+      "facility_id"
+    )
     const reportResult = await getUpstreamLeaseEmissionReport(
       user_id,
       facility,
@@ -634,6 +662,7 @@ exports.reportUpstreamLeaseEmission = async (req, res) => {
         status: 200,
         message: "The report fetched succesfully",
         result: reportResult,
+        totalCount : totalCount.total || 0
       });
     } else {
       return res.json({
@@ -641,6 +670,7 @@ exports.reportUpstreamLeaseEmission = async (req, res) => {
         status: 400,
         message: "No Data Found",
         result: reportResult,
+        totalCount : totalCount.total || 0
       });
     }
   } catch (err) {
@@ -683,6 +713,14 @@ exports.reportDownstreamLeaseEmission = async (req, res) => {
 
     const offset = (pageNo - 1) * pageSize;
     const user_id = req.user.user_id;
+    const monthsCondition = `month in (${month})`;
+    const [totalCount] = await getSingleReportCount(
+      facility,
+      year,
+      monthsCondition,
+      "downstreamLease_emission",
+      "facility_id"
+    )
     const reportResult = await getDownstreamLeaseEmissionReport(
       user_id,
       facility,
@@ -697,6 +735,7 @@ exports.reportDownstreamLeaseEmission = async (req, res) => {
         status: 200,
         message: "The report fetched succesfully",
         result: reportResult,
+        totalCount : totalCount.total || 0
       });
     } else {
       return res.json({
@@ -704,6 +743,7 @@ exports.reportDownstreamLeaseEmission = async (req, res) => {
         status: 400,
         message: "No Data Found",
         result: reportResult,
+        totalCount : totalCount.total || 0
       });
     }
   } catch (err) {
@@ -1039,7 +1079,14 @@ exports.reportEmployeeCommuting = async (req, res) => {
 
     const offset = (pageNo - 1) * pageSize;
     const user_id = req.user.user_id;
-    console.log(">>>>>>>>>>", user_id);
+    const [totalCount] = await getSingleReportCount(
+      facility,
+      year,
+      null,
+      "employee_commuting_category",
+      "facilities"
+    )
+    console.log(">>>>>>>>>>", totalCount);
     const reportResult = await getEmployeeCommutingReport(
       user_id,
       facility,
@@ -1053,6 +1100,7 @@ exports.reportEmployeeCommuting = async (req, res) => {
         status: 200,
         message: "The report fetched succesfully",
         result: reportResult,
+        totalCount : totalCount.total || 0
       });
     } else {
       return res.json({
@@ -1060,6 +1108,7 @@ exports.reportEmployeeCommuting = async (req, res) => {
         status: 400,
         message: "No Data Found",
         result: reportResult,
+        totalCount : totalCount.total || 0
       });
     }
   } catch (err) {
@@ -1103,6 +1152,14 @@ exports.reportHomeOffice = async (req, res) => {
 
     const offset = (pageNo - 1) * pageSize;
     const user_id = req.user.user_id;
+    // const monthsCondition = `month in (${month})`;
+    const [totalCount] = await getSingleReportCount(
+      facility,
+      year,
+      null,
+      "homeoffice_category",
+      "facilities"
+    )
     const reportResult = await getHomeOfficeReport(
       user_id,
       facility,
@@ -1117,6 +1174,7 @@ exports.reportHomeOffice = async (req, res) => {
         status: 200,
         message: "The report fetched succesfully",
         result: reportResult,
+        totalCount : totalCount.total || 0
       });
     } else {
       return res.json({
@@ -1124,6 +1182,7 @@ exports.reportHomeOffice = async (req, res) => {
         status: 400,
         message: "No Data Found",
         result: reportResult,
+        totalCount : totalCount.total || 0
       });
     }
   } catch (err) {
@@ -1167,6 +1226,14 @@ exports.reportSoldProducts = async (req, res) => {
     const offset = (pageNo - 1) * pageSize;
     const user_id = req.user.user_id;
     var finalReport = [];
+    const monthsCondition = `month in (${month})`;
+    const [totalCount] = await getSingleReportCount(
+      facility,
+      year,
+      monthsCondition,
+      "sold_product_category",
+      "facilities"
+    )
     const reportResult = await getSoldProductReport(
       user_id,
       facility,
@@ -1193,6 +1260,7 @@ exports.reportSoldProducts = async (req, res) => {
         status: 200,
         message: "The report fetched succesfully",
         result: finalReport,
+        totalCount : totalCount.total || 0
       });
     } else {
       return res.json({
@@ -1200,6 +1268,7 @@ exports.reportSoldProducts = async (req, res) => {
         status: 400,
         message: "No Data Found",
         result: reportResult,
+        totalCount : totalCount.total || 0
       });
     }
   } catch (err) {
@@ -1243,6 +1312,14 @@ exports.reportEndOfLifeTreatment = async (req, res) => {
     const offset = (pageNo - 1) * pageSize;
     const user_id = req.user.user_id;
     var finalReport = [];
+    const monthsCondition = `month in (${month})`;
+    const [totalCount] = await getSingleReportCount(
+      facility,
+      year,
+      monthsCondition,
+      "endof_lifetreatment_category",
+      "facilities"
+    )
     const reportResult = await getEndOfLifeTreatmentReport(
       user_id,
       facility,
@@ -1265,6 +1342,7 @@ exports.reportEndOfLifeTreatment = async (req, res) => {
         status: 200,
         message: "The report fetched succesfully",
         result: finalReport,
+        totalCount : totalCount.total || 0
       });
     } else {
       return res.json({
@@ -1272,6 +1350,7 @@ exports.reportEndOfLifeTreatment = async (req, res) => {
         status: 400,
         message: "No Data Found",
         result: reportResult,
+        totalCount : totalCount.total || 0
       });
     }
   } catch (err) {
@@ -1314,6 +1393,14 @@ exports.reportProOfSoldProducts = async (req, res) => {
 
     const offset = (pageNo - 1) * pageSize;
     const user_id = req.user.user_id;
+    const monthsCondition = `month in (${month})`;
+    const [totalCount] = await getSingleReportCount(
+      facility,
+      year,
+      monthsCondition,
+      "processing_of_sold_products_category",
+      "facilities"
+    )
     const reportResult = await getProOfSoldGoodsReport(
       user_id,
       facility,
@@ -1328,6 +1415,7 @@ exports.reportProOfSoldProducts = async (req, res) => {
         status: 200,
         message: "The report fetched succesfully",
         result: reportResult,
+        totalCount : totalCount.total || 0
       });
     } else {
       return res.json({
@@ -1335,6 +1423,7 @@ exports.reportProOfSoldProducts = async (req, res) => {
         status: 400,
         message: "No Data Found",
         result: reportResult,
+        totalCount : totalCount.total || 0
       });
     }
   } catch (err) {

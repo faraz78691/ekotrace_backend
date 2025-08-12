@@ -991,11 +991,11 @@ module.exports = {
         return data;
     },
 
-    getKpiInventoryAggregateDataQuaterly: async (facilities, kpiIds, user_id) => {
+    getKpiInventoryAggregateDataQuaterly: async (facilities, kpiIds, user_id, year) => {
         const facilityIds = facilities.split(',').map(id => parseInt(id.trim()));
         const kpiIdList = kpiIds.split(',').map(id => parseInt(id.trim()));
         const data = {};
-        const currentYear = new Date().getFullYear();
+        const currentYear = year || new Date().getFullYear();
 
         for (let i = 0; i < kpiIdList.length; i++) {
             const kpiId = kpiIdList[i];
@@ -1049,11 +1049,11 @@ module.exports = {
         return data;
     },
 
-    getKpiInventoryAggregateDataMonthly: async (facilities, kpiIds, user_id) => {
+    getKpiInventoryAggregateDataMonthly: async (facilities, kpiIds, user_id, year ) => {
         const facilityIds = facilities.split(',').map(id => parseInt(id.trim()));
         const kpiIdList = kpiIds.split(',').map(id => parseInt(id.trim()));
         const data = {};
-        const currentYear = new Date().getFullYear();
+        const currentYear = year || new Date().getFullYear();
 
         for (let i = 0; i < kpiIdList.length; i++) {
             const kpiId = kpiIdList[i];
@@ -1131,11 +1131,11 @@ module.exports = {
         return data;
     },
 
-    getKpiInventoryCompareDataAnnually: async (facilities, kpiIds) => {
+    getKpiInventoryCompareDataAnnually: async (facilities, kpiIds, year) => {
         const facilityIds = facilities.split(',').map(id => parseInt(id.trim()));
         const kpiIdList = kpiIds.split(',').map(id => parseInt(id.trim()));
         const data = {};
-        const currentYear = new Date().getFullYear();
+        const currentYear = year || new Date().getFullYear();
 
         for (let i = 0; i < kpiIdList.length; i++) {
             const kpiId = kpiIdList[i];

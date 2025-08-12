@@ -13,7 +13,7 @@ const {
   updateEmissionStatus,
   insertFranchiseEmission,
   insertInvestmentEmission, fetchPurchase_categories, fetchPurchase_subcategories, fetchPurchase_categoriesproduct, fetchPurchaseGoodData, findVendorByName, addVendorName, fetchPurchaseGoodCountryData, fetchVendorCountryById,
-  fetchVendorCountry,fetchPurchaseGoodDataBulk
+  fetchVendorCountry, fetchPurchaseGoodDataBulk
 } = require("../models/purchasedgood");
 
 const {
@@ -119,7 +119,7 @@ exports.getTypesofpurchase = async (req, res) => {
 
 exports.purchaseGoodsAllcategories = async (req, res) => {
   try {
-    const { product_code_id, typeofpurchase,country_id,year } = req.body;
+    const { product_code_id, typeofpurchase, country_id, year } = req.body;
     const schema = Joi.alternatives(
       Joi.object({
         product_code_id: [Joi.string().empty().required()],
@@ -152,7 +152,7 @@ exports.purchaseGoodsAllcategories = async (req, res) => {
 
             await Promise.all(
               sub_categories.map(async (item1) => {
-                const categoriesproduct = await fetchPurchase_categoriesproduct(product_code_id, typeofpurchase, item1.value, item.value,country_id,year);
+                const categoriesproduct = await fetchPurchase_categoriesproduct(product_code_id, typeofpurchase, item1.value, item.value, country_id, year);
                 item1.collapsed = true
                 item1.checked = false
                 if (categoriesproduct.length > 0) {
@@ -233,7 +233,7 @@ exports.uploadTemplate = async (req, res) => {
         data = await readExcelFile(req.file.path);
       }
 
-      console.log("data>>>>", data);
+     
 
       // Insert data into the database
       var array = [];
@@ -244,7 +244,7 @@ exports.uploadTemplate = async (req, res) => {
             let months = JSON.parse(month);
             for (let monthdata of months) {
               if (item["Product Code Standard"] !== '') {
-                console.log("print here ")
+               
                 const rowData = {
                   businessunit: item["Business Unit"] ? item["Business Unit"] : "",
                   typeofpurchase: item["Type of purchase"]
@@ -284,8 +284,7 @@ exports.uploadTemplate = async (req, res) => {
 
         if (array.length !== 0) {
 
-          console.log("array", array);
-          console.log('aaray lenght', array.length)
+         
 
           const datainfo = await uplaodTemplate(array);
 
@@ -563,7 +562,7 @@ exports.purchaseGoods = async (req, res) => {
             } else {
               let yearRange = EFVRes[0]?.Fiscal_Year; // The string representing the year range
               let [startYear, endYear] = yearRange.split('-').map(Number);
-              console.log(year, startYear, endYear);
+             
               if (year >= startYear && year <= endYear) {
                 if (item.unit == 'kg') {
                   emission = item.vendorspecificEF == "" || '' ? EFVRes[0]?.EFkgC02e_kg : item.vendorspecificEF;
@@ -592,9 +591,15 @@ exports.purchaseGoods = async (req, res) => {
             let productcode = "";
             if (item.product_category) {
               where = ` where id = '${item.product_category}'`;
-              purchasegoods = await getSelectedData("purchase_goods_categories_ef", where, 'HSN_code');
+              purchasegoods = await getSelectedData("purchase_goods_categories_ef", where, 'HSN_code, NAIC_code, ISIC_code');
+              if (productcodestandard == 1) {
+                productcode = purchasegoods[0]?.HSN_code;
+              } else if (productcodestandard == 2) {
+                productcode = purchasegoods[0]?.NAIC_code;
+              } else {
+                productcode = purchasegoods[0]?.ISIC_code;
+              }
 
-              productcode = purchasegoods[0]?.HSN_code;
             } else {
               productcode = "";
             }
@@ -718,7 +723,7 @@ exports.purchaseGoods = async (req, res) => {
 exports.bulkPurchaseGoodsUpload = async (req, res) => {
   try {
     const { facilities, jsonData, is_annual, productcodestandard, tenant_id, super_tenant_id } = req.body;
-    console.log("jsonData", jsonData);
+   
     const schema = Joi.object({
       facilities: Joi.string().allow('').required(),
       jsonData: Joi.string().allow('').required(),
@@ -800,13 +805,7 @@ exports.bulkPurchaseGoodsUpload = async (req, res) => {
             let purchasegoods = "";
             let productcode = "";
 
-            if (item.product_category) {
-              where = ` where id = '${item.product_category}'`;
-              purchasegoods = await getSelectedData("purchase_goods_categories_ef", where, 'HSN_code');
-              productcode = purchasegoods[0]?.HSN_code;
-            } else {
-              productcode = "";
-            }
+          
 
             if (is_annual == '0' && item.month != 'Invalid date') {
               const rowData = {
@@ -895,7 +894,7 @@ exports.bulkPurchaseGoodsUpload = async (req, res) => {
 exports.bulkPurchaseGoodsUploadAIMatched = async (req, res) => {
   try {
     const { facilities, purchasePayloadId, is_annual, productcodestandard, tenant_id, super_tenant_id } = req.body;
-    
+
     const schema = Joi.object({
       facilities: Joi.string().allow('').required(),
       purchasePayloadId: Joi.number().required(),
@@ -917,7 +916,7 @@ exports.bulkPurchaseGoodsUploadAIMatched = async (req, res) => {
       });
     } else {
       const user_id = req.user.user_id;
-     
+
 
       let countrydata = await country_check(facilities);
       if (countrydata.length == 0) {
@@ -929,26 +928,26 @@ exports.bulkPurchaseGoodsUploadAIMatched = async (req, res) => {
       }
 
       const getMatchItems = await getData('purchase_goods_matched_items_ai', `where purchase_payload_id = ${purchasePayloadId} AND match_productCategory_Id IS NOT NULL AND match_productCategory_Id REGEXP '^[0-9]+$' `);
-      console.log("getMatchItems",getMatchItems.length); ;
+     
       let data = getMatchItems;
       let array = [];
       if (data?.length > 0) {
-     
+
         const chunkSize = 500;
-        
+
         for (let i = 0; i < data.length; i += chunkSize) {
           const chunk = data.slice(i, i + chunkSize);
-        
+
           const batchResults = await Promise.all(chunk.map(async (item) => {
             if (item.status != 1) return null;
-        
+
             let emission = '';
             let EFVRes;
-        
+
             const parsedDate = moment(item.purchase_date, "DD-MM-YYYY");
             item.year = parsedDate.year();
             item.month = parsedDate.format("MMM");
-        
+
             if (!item.vendor_name && !item.vendor_ef) {
               EFVRes = await fetchPurchaseGoodDataBulk(item.product_name, countrydata[0].CountryId, item.year);
             } else {
@@ -964,14 +963,14 @@ exports.bulkPurchaseGoodsUploadAIMatched = async (req, res) => {
                 vendorId = vendorInsert.insertId;
               }
               item.vendorId = vendorId;
-        
+
               EFVRes = await fetchPurchaseGoodDataBulk(item.product_name, countrydata[0].CountryId, item.year);
             }
-        
+
             if (EFVRes.length > 0) {
               item.typeofpurchase = EFVRes[0]?.typeofpurchase;
               item.product_category = EFVRes[0]?.id;
-        
+
               if (item.unit === 'Kg') {
                 emission = !item.vendor_ef ? EFVRes[0]?.EFkgC02e_kg : item.vendor_ef;
               } else if (item.unit === 'Tonnes') {
@@ -982,16 +981,16 @@ exports.bulkPurchaseGoodsUploadAIMatched = async (req, res) => {
                 emission = !item.vendor_ef ? EFVRes[0]?.EFkgC02e_ccy : item.vendor_ef;
               }
             }
-        
+
             let productcode = '';
-          
+
             if (is_annual === '0' && item.month !== 'Invalid date') {
               const rowData = {
                 typeofpurchase: item.typeofpurchase || "",
                 product_category: item.product_category || "",
                 is_annual: is_annual || "",
                 productcodestandard: productcodestandard || "",
-                productcode: item.productcode || "",
+                productcode: item.hsn_code || "",
                 valuequantity: item.value || "",
                 unit: item.unit || "",
                 vendor_id: item.vendorId || null,
@@ -1009,25 +1008,23 @@ exports.bulkPurchaseGoodsUploadAIMatched = async (req, res) => {
               };
               return rowData;
             }
-        
+
             return null;
           }));
-        console.log(batchResults,"batchResults");
+         
           // Add non-null rows to final array
           array.push(...batchResults.filter(row => row !== null));
-          
+
         }
-        
-      }else{
+
+      } else {
         return res.json({
           message: "Match data not found",
           status: 400,
           success: false,
         });
       }
-console.log("array2323",array);
-    
-
+     
       if (array.length > 0) {
         console.log(array);
         const datainfo = await uplaodTemplate(array);
@@ -1294,7 +1291,7 @@ exports.downStreamTransportation = async (req, res) => {
     if (checkNUllUnDString(vehicle_type)) {
       const vehicleIdRes = await fetchVehicleByTypeId(vehicle_type);
       let vehicleId = vehicleIdRes[0]?.id;
-      const EFVRes = await fetchVehicleEmission(vehicleId, sub_category, countrydata[0].CountryId , year);
+      const EFVRes = await fetchVehicleEmission(vehicleId, sub_category, countrydata[0].CountryId, year);
       if (EFVRes.length == 0) {
         return res.json({ success: false, message: "No country found for this EF", status: 400 });
       } else {
@@ -1362,7 +1359,7 @@ exports.downStreamTransportation = async (req, res) => {
     if (checkNUllUnDString(storagef_type)) {
       const vehicleIdRes = await fetchVehicleId(storagef_type);
       const vehicleId = vehicleIdRes[0].id;
-      const EFSRes = await fetchVehicleEmission(vehicleId, storagef_type, countrydata[0].CountryId , year);
+      const EFSRes = await fetchVehicleEmission(vehicleId, storagef_type, countrydata[0].CountryId, year);
 
       if (EFSRes.length == 0) {
         return res.json({

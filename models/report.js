@@ -26,14 +26,19 @@ module.exports = {
     return db.query(`SELECT COUNT(*) AS total FROM purchase_goods_categories pgc WHERE pgc.year = ${year} AND pgc.month IN (${month})AND pgc.status = 'S' AND pgc.facilities IN (${facility})`);
   },
 
-  getSingleReportCount: async (
-    facility,
-    year,
-    monthCondition,
-    table_name,
-    facility_column_name
-  ) => {
-    return db.query(`SELECT COUNT(*) AS total FROM ${table_name}  WHERE year = ${year} AND ${monthCondition} AND status = 'S' AND ${facility_column_name} IN (${facility})`);
+  getSingleReportCount: async (facility, year, monthCondition, table_name, facility_column_name) => {
+    let monthFilter = monthCondition ? `AND ${monthCondition}` : '';
+    
+    const sql = `
+      SELECT COUNT(*) AS total 
+      FROM ${table_name}  
+      WHERE year = ${year} 
+      ${monthFilter}
+      AND status = 'S' 
+      AND ${facility_column_name} IN (${facility})
+    `;
+    
+    return db.query(sql);
   },
   
 

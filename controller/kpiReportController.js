@@ -2503,12 +2503,12 @@ exports.getKpiInventoryDashboard = async (req, res) => {
                 if (format == 'Annually') {
                     getKpiInvetoryResponse = await kpiModel.getKpiInventoryAggregateDataAnnually(facilities, startDate, endDate, kpiIds, user_id);
                 } else if (format == 'Quaterly') {
-                    getKpiInvetoryResponse = await kpiModel.getKpiInventoryAggregateDataQuaterly(facilities, kpiIds, user_id);
+                    getKpiInvetoryResponse = await kpiModel.getKpiInventoryAggregateDataQuaterly(facilities, kpiIds, user_id ,endDate);
                 } else {
-                    getKpiInvetoryResponse = await kpiModel.getKpiInventoryAggregateDataMonthly(facilities, kpiIds, user_id);
+                    getKpiInvetoryResponse = await kpiModel.getKpiInventoryAggregateDataMonthly(facilities, kpiIds, user_id,endDate);
                 }
             } else {
-                getKpiInvetoryResponse = await kpiModel.getKpiInventoryCompareDataAnnually(facilities, kpiIds)
+                getKpiInvetoryResponse = await kpiModel.getKpiInventoryCompareDataAnnually(facilities, kpiIds,endDate)
             }
 
             return res.status(200).json({ error: false, message: "Successfully get dashboard kpi", success: true, data: getKpiInvetoryResponse })

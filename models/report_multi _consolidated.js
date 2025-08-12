@@ -4,15 +4,40 @@ const baseurl = config.base_url;
 
 module.exports = {
   getPurchaseGoodsReportMultiConsole: async (facility, year, month) => {
-    return db.query(`select 'Scope3' as scope, 'Purchase Goods' as category, top.typesofpurchasename as DataPoint1, pgcef.product as DataPoint2, \
-                     sum(pgc.emission) as Emission,  pgc.year as Years, pgc.month as Months, \
-                     f.AssestName as facility from  purchase_goods_categories pgc, \`dbo.facilities\` f, \`dbo.typesofpurchase\`   top, \
-                     purchase_goods_categories_ef pgcef where   pgc.facilities in (${facility}) and \
-                     pgc.year =${year} and pgc.month in (${month}) and pgc.status = 'S' and \
-                     pgc.facilities= f.ID  and pgc.productcode = pgcef.HSN_code \
-                    and pgc.product_category = pgcef.id and top.id = pgc.typeofpurchase group by DataPoint2,  Years 
-                    ORDER BY FIELD(MONTH,'Jan','Feb','Mar','Apr', 'May','Jun',                  
-                    'Jul','Aug','Sep','Oct','Nov', 'Dec')`);
+    return db.query(`SELECT 
+    'Scope3' AS scope,
+    'Purchase Goods & Services' AS category,          -- from productCategory
+    sc.name AS DataPoint1,     -- from subCategory
+    pgcef.product AS DataPoint2,
+    SUM(pgc.emission) AS Emission,
+    pgc.year AS Years,
+    pgc.month AS Months,
+    f.AssestName AS facility
+FROM 
+    purchase_goods_categories pgc
+JOIN 
+    \`dbo.facilities\` f 
+    ON pgc.facilities = f.ID
+JOIN 
+    purchase_goods_categories_ef pgcef 
+    ON pgc.product_category = pgcef.id
+JOIN 
+    \`dbo.purchase_category\` pc 
+    ON pgcef.category = pc.id
+JOIN 
+    \`dbo.purchase_subcategory\` sc 
+    ON pgcef.sub_category = sc.id
+WHERE 
+    pgc.facilities IN (${facility})
+    AND pgc.year = ${year}
+    AND pgc.month IN (${month})
+    AND pgc.status = 'S'
+GROUP BY 
+    DataPoint2, Years
+ORDER BY 
+    FIELD(Months, 'Jan','Feb','Mar','Apr','May','Jun',
+          'Jul','Aug','Sep','Oct','Nov','Dec');
+`);
   },
 
   getConpanyOwnedVehiclesMultiConsole: async (facility, year, month) => {
