@@ -132,7 +132,7 @@ module.exports = {
   },
 
   insert_water_withdrawl_by_source: async (data) => {
-    return db.query(`INSERT INTO  water_withdrawl_by_source (kilolitres,water_withdrawl,user_id,water_supply_treatment_id,month,year,totalwaterwithdrawl) VALUES ?`,
+    return db.query(`INSERT INTO  water_withdrawl_by_source (kilolitres,water_withdrawl,user_id,water_supply_treatment_id,month,year, totalwaterwithdrawl,withdrawl_emissions) VALUES ?`,
       [data.map((item) => [
         item.kilolitres,
         item.water_withdrawl,
@@ -140,13 +140,14 @@ module.exports = {
         item.water_supply_treatment_id,
         item.month,
         item.year,
-        item.totalwaterwithdrawl
+        item.totalwaterwithdrawl,
+        item.withdrawl_emissions  
       ])]);
   },
 
 
   insert_water_discharge_by_destination: async (data) => {
-    return db.query(`INSERT INTO   water_discharge_by_destination (water_discharge,withthtreatment,leveloftreatment,user_id,water_supply_treatment_id,month,year,totalwaterdischarge) VALUES ?`,
+    return db.query(`INSERT INTO   water_discharge_by_destination (water_discharge,withthtreatment,leveloftreatment,user_id,water_supply_treatment_id,month,year,totalwaterdischarge,treated_water,total_treatment_emissions) VALUES ?`,
       [data.map((item) => [
         item.water_discharge,
         item.withthtreatment,
@@ -155,7 +156,9 @@ module.exports = {
         item.water_supply_treatment_id,
         item.month,
         item.year,
-        item.totalwaterdischarge
+        item.totalwaterdischarge,
+        item.treated_water,
+        item.total_treatment_emissions
       ])]);
   },
 
@@ -179,8 +182,8 @@ module.exports = {
     return db.query("insert into processing_of_sold_products_ef  set ?", [product]);
   },
 
-  updateWater_ef: async (emission, waterTreated, treatment_emission_factor_used, totalwater, non_water_treated, id) => {
-    return db.query("UPDATE water_supply_treatment_category set emission = ?, treatment_emission = ?, treatment_emission_factor_used = ?, water_treated = ?, water_non_treated = ? where id= ?", [emission, waterTreated, treatment_emission_factor_used, totalwater, non_water_treated, id]);
+  updateWater_ef: async (emission,withdrawn_emission, treatment_emission,  waterTreated, non_water_treated,totalwatertreated, id) => {
+    return db.query("UPDATE water_supply_treatment_category set emission = ?,withdrawn_emission = ?, treatment_emission = ?,  water_treated = ?, water_non_treated = ?,totalwatertreated	= ? where id= ?", [emission, withdrawn_emission, treatment_emission, waterTreated, non_water_treated, totalwatertreated, id]);
   },
 
 }

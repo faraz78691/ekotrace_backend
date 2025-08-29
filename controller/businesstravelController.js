@@ -2507,21 +2507,7 @@ exports.AddwatersupplytreatmentCategory = async (req, res) => {
         }
 
 
-        // console.log(emsision, "emsisionemsisionemsision", "-----------", water_supply_ef)
-
-        // if(watertreatment.length > 0){
-        //   if(water_treatment_unit == '1' ){
-        //     water_treatment_ef= parseFloat(watertreatment[0]?.kgCO2e_cubic_metres * water_treatment)
-        //    }else if(water_treatment_unit == '2'){
-        //     water_treatment_ef =  parseFloat(watertreatment[0]?.kgCO2e_million_litres* water_treatment)
-        //    }
-        // }else{
-        //   return res.json({
-        //     success: false,
-        //     message: "EF not Found for water supply treatment category",
-        //     status: 400,
-        //     });
-        // }
+   
         emsision = parseFloat(water_supply_ef).toFixed(4);
 
         let category = {
@@ -2705,6 +2691,333 @@ exports.AddwatersupplytreatmentCategory = async (req, res) => {
       if (insertId) {
         for (let i = 0; i < insertId.length; i++) {
           const waterpplyory1 = await updateWater_ef(emissiondata, parseFloat(waterTreated).toFixed(4), treatment_emission_factor_used, totalwater, non_water_treated, insertId[i]);
+        }
+        let where = ` where user_id =  '${user_id}' and facilities = '${facilities}'`;
+        const water_supplytreatmentcategory1 = await getSelectedColumn("water_supply_treatment_category", where, "*");
+        return res.json({
+          success: true,
+          message: "Succesfully Added water supply treatment category",
+          categories: water_supplytreatmentcategory1,
+          status: 200,
+        });
+      } else {
+        return res.json({
+          success: false,
+          message: "Some problem occured while Adding water supply treatment category",
+          status: 500,
+        });
+      }
+    }
+  } catch (err) {
+    console.log(err);
+    return res.json({
+      success: false,
+      message: "Internal server error",
+      error: err,
+      status: 500,
+    });
+  }
+};
+exports.UploadWaterSupplyDE = async (req, res) => {
+  try {
+    const { water_supply, water_treatment, water_supply_unit, water_discharge_only, water_treatment_unit,
+      water_withdrawl, water_discharge, batch, facilities, month, year } = req.body;
+    const schema = Joi.alternatives(
+      Joi.object({
+        water_supply: [Joi.string().empty().required()],
+        water_treatment: [Joi.string().empty().required()],
+        water_supply_unit: [Joi.string().empty().required()],
+        water_treatment_unit: [Joi.string().empty().required()],
+        water_withdrawl: [Joi.optional().allow("")],
+        water_discharge: [Joi.optional().allow("")],
+        water_discharge_only: [Joi.optional().allow("")],
+        facilities: [Joi.string().empty().required()],
+        batch: [Joi.string().empty().required()],
+        month: [Joi.string().empty().required()],
+        year: [Joi.string().empty().required()],
+
+      })
+    );
+    const result = schema.validate(req.body);
+    if (result.error) {
+      const message = result.error.details.map((i) => i.message).join(",");
+      return res.json({
+        message: result.error.details[0].message,
+        error: message,
+        missingParams: result.error.details[0].message,
+        status: 200,
+        success: false,
+      });
+    } else {
+      const user_id = req.user.user_id;
+
+      let water_supplytreatmentcategory = ""
+      let insertId = [];
+      let insertMonth = []
+      let countrydata = await country_check(facilities);
+      if (countrydata.length == 0) {
+        return res.json({
+          success: false,
+          message: "EF not Found for water supply treatment category",
+          status: 400,
+        });
+      }
+      let emsision = 0;
+
+      if (water_supply) {
+        var watersupplyEf = await getData('waterSupply_sub_EFs' , `where country_id = ${countrydata[0].CountryId} and Right(Fiscal_Year,4) = '${year}' and unit_id = '${water_supply_unit}'`);
+        const waterTreatmentEf = await getData('waterSupply_sub_EFs' , `where country_id = ${countrydata[0].CountryId} and Right(Fiscal_Year,4) = '${year}' and unit_id = '${water_treatment_unit}'`);
+    console.log("watersupplyEf",watersupplyEf);
+        let water_supply_ef = "";
+        let water_treatment_ef = "";
+        let withdrawn_emission_factor_used = "";
+
+        if (watersupplyEf.length > 0) {
+          // let yearRange = watersupplyEf[0]?.Fiscal_Year; // The string representing the year range
+          // let [startYear, endYear] = yearRange.split('-').map(Number);
+          // if (year >= startYear && year <= endYear) {
+          //   if (water_supply_unit == '1') {
+          //     let totalem = parseFloat(watersupply[0]?.kgCO2e_cubic_metres * water_supply) + parseFloat(watertreatment[0]?.kgCO2e_cubic_metres)
+          //     withdrawn_emission_factor_used = watersupply[0]?.kgCO2e_cubic_metres;
+          //     water_supply_ef = totalem;
+          //   } else if (water_supply_unit == '2') {
+          //     let totalem = parseFloat(watersupply[0]?.kgCO2e_Kilo_litres * water_supply) + parseFloat(watertreatment[0]?.kgCO2e_Kilo_litres)
+          //     withdrawn_emission_factor_used = watersupply[0]?.kgCO2e_Kilo_litres;
+          //     water_supply_ef = totalem
+          //   }
+          // } else if (year == startYear) {
+          //   if (water_supply_unit == '1') {
+          //     let totalem = parseFloat(watersupply[0]?.kgCO2e_cubic_metres * water_supply) + parseFloat(watertreatment[0]?.kgCO2e_cubic_metres)
+          //     withdrawn_emission_factor_used = watersupply[0]?.kgCO2e_cubic_metres;
+          //     water_supply_ef = totalem;
+          //   } else if (water_supply_unit == '2') {
+          //     let totalem = parseFloat(watersupply[0]?.kgCO2e_Kilo_litres * water_supply) + parseFloat(watertreatment[0]?.kgCO2e_Kilo_litres)
+          //     withdrawn_emission_factor_used = watersupply[0]?.kgCO2e_Kilo_litres;
+          //     water_supply_ef = totalem
+          //   }
+          } else {
+            return res.json({
+              success: false,
+              message: "EF not Found for this year",
+              status: 400,
+            });
+          }
+        } else {
+          return res.json({
+            success: false,
+            message: "EF not Found for water supply category",
+            status: 400,
+          });
+        }
+
+        let waterSupplyEfValues = [
+          watersupplyEf[0].surface_water,
+          watersupplyEf[0].ground_water,
+          watersupplyEf[0].third_party_water,
+          watersupplyEf[0].sea_water,
+          watersupplyEf[0].other_water
+        ];
+        let waterTreatmentEfValues = [
+          watersupplyEf[0].primary_treatment,
+          watersupplyEf[0].secondary_treamtment,
+          watersupplyEf[0].tertiary_treatment,
+       
+        ];
+
+        let waterTreatmentEfObj = {
+          primary_treatment: watersupplyEf[0].primary_treatment,
+          secondary_treamtment: watersupplyEf[0].secondary_treamtment,
+          tertiary_treatment: watersupplyEf[0].tertiary_treatment
+        }
+   
+        emsision = 0
+
+        let category = {
+          water_supply: water_supply ? water_supply : "",
+          water_treatment: water_treatment ? water_treatment : "",
+          water_supply_unit: water_supply_unit ? water_supply_unit : "",
+          water_treatment_unit: water_treatment_unit ? water_treatment_unit : "",
+          emission: emsision ? emsision : 0,
+          withdrawn_emission: emsision ? emsision : 0,
+          withdrawn_emission_factor_used: watersupplyEf ? waterSupplyEfValues.join(",") : "",
+          treatment_emission_factor_used:waterTreatmentEfValues.join(",") || "",
+          emission_factor_unit: "kg C02e/KL",
+          facilities: facilities ? facilities : "",
+          user_id: user_id,
+          batch: batch,
+          year: year
+        }
+        let months = JSON.parse(month);
+        for (let monthdata of months) {
+          category.month = monthdata;
+          const water_supplytreatmentcategory = await insertwater_supply_treatment_category(category);
+          console.log("water_supplytreatmentcategory", water_supplytreatmentcategory);
+          if (water_supplytreatmentcategory.affectedRows > 0) {
+            var insertIdid = water_supplytreatmentcategory.insertId
+            insertId.push(insertIdid);
+            insertMonth?.push({
+              insertId: insertIdid,
+              month: monthdata
+            })
+          }
+        }
+      
+      let totalWithdrawnEmission = 0; // declared outside
+
+      if (water_withdrawl) {
+        let array = [];
+        let json = JSON.parse(water_withdrawl);
+      
+        await Promise.all(
+          json.map(async (item, index) => {
+            for (let i = 0; i < insertId.length; i++) {
+              let totalwaterwithdrawl = parseFloat(water_supply * item.kilolitres / 100);
+              let withdrawn_emission = totalwaterwithdrawl * waterSupplyEfValues[index];
+     
+              totalWithdrawnEmission += withdrawn_emission; // accumulate
+      
+              let months = JSON.parse(month);
+              if (i == 0) {
+                for (var k = 0; k < months?.length; k++) {
+                  let data12 = insertMonth?.filter((item) => (
+                    item?.month == months[k] && item
+                  ));
+      
+                  array.push({
+                    kilolitres: item.kilolitres ? item.kilolitres : 0,
+                    water_withdrawl: item.type ? item.type : "",
+                    user_id: user_id,
+                    water_supply_treatment_id: data12?.length != 0 ? data12[0]?.insertId ? data12[0]?.insertId : '' : '',
+                    year: year,
+                    totalwaterwithdrawl: totalwaterwithdrawl,
+                    withdrawl_emissions: withdrawn_emission,
+                    month: months[k]
+                  });
+                }
+              }
+            }
+          })
+        );
+      
+        const water_supplytreatmentcategory2 = await insert_water_withdrawl_by_source(array);
+      }
+      
+      console.log("✅ Final totalWithdrawnEmission:", totalWithdrawnEmission); 
+
+      let dischargearray = [];
+      if (water_discharge_only) {
+        let array1 = [];
+        let json = JSON.parse(water_discharge_only);
+        await Promise.all(
+          json.map(async (item) => {
+            for (let i = 0; i < insertId.length; i++) {
+              let totaldischarge = parseFloat(water_treatment * item.kilolitres / 100);
+              dischargearray.push(totaldischarge);
+              // let category = {
+              //   water_discharge: item.type ? item.type : "",
+              //   kilolitres: item.kilolitres ? item.kilolitres : 0,
+              //   user_id: user_id,
+              //   water_supply_treatment_id: insertId[i] ? insertId[i] : "",
+              //   year: year,
+              //   totaldischarge: totaldischarge
+              // }
+              let months = JSON.parse(month);
+              if (i == 0) {
+                for (var k = 0; k < months?.length; k++) {
+                  let data12 = insertMonth?.filter((item) => (
+                    item?.month == months[k] && item
+                  ))
+                  array1.push({
+                    water_discharge: item.type ? item.type : "",
+                    kilolitres: item.kilolitres ? item.kilolitres : 0,
+                    user_id: user_id,
+                    water_supply_treatment_id: data12?.length != 0 ? data12[0]?.insertId ? data12[0]?.insertId : '' : '',
+                    year: year,
+                    totaldischarge: totaldischarge,
+                    month: months[k]
+                  });
+                }
+
+              }
+            }
+          })
+        );
+        const water_supplytreatmentcategory1 = await insert_water_discharge_by_destination_only(array1);
+      }
+      console.log("dischargearray", dischargearray);
+
+      let totalWaterTreated = 0;
+      let treatedWaterArray = [];
+      let totalTreatedEmission = 0;
+      if (water_discharge) {
+        let array1 = [];
+        let json = JSON.parse(water_discharge);
+        console.log(json);
+        await Promise.all(
+          json.map(async (item, j) => {
+            for (let i = 0; i < insertId.length; i++) {
+              let treatedWater = 0;
+              let treatmentEmission = 0;
+       
+              if (dischargearray[j]) {
+                let totaldischarge = dischargearray[j];
+                treatedWater = item.withthtreatment / 100 * totaldischarge;
+                console.log("treatedWater", treatedWater);
+                if(item.leveloftreatment == 'Primary'){
+                  treatmentEmission = treatedWater * waterTreatmentEfObj.primary_treatment
+                }else if(item.leveloftreatment == 'Secondary'){
+                  treatmentEmission = treatedWater * waterTreatmentEfObj.secondary_treamtment
+                }else if(item.leveloftreatment == 'Tertiary'){
+                  treatmentEmission = treatedWater * waterTreatmentEfObj.tertiary_treatment
+                }
+             
+                console.log("treatmentEmission", treatmentEmission);
+                totalTreatedEmission += treatmentEmission;
+                treatedWaterArray.push(treatedWater);
+              } else {
+                treatedWater = 0
+              }
+              totalWaterTreated += treatedWater;
+              let months = JSON.parse(month);
+              if (i == 0) {
+                for (var k = 0; k < months?.length; k++) {
+                  let data12 = insertMonth?.filter((item) => (
+                    item?.month == months[k] && item
+                  ))
+                  array1.push({
+                    water_discharge: item.type ? item.type : "",
+                    withthtreatment: item.withthtreatment ? item.withthtreatment : "",
+                    leveloftreatment: item.leveloftreatment ? item.leveloftreatment : "",
+                    user_id: user_id,
+                    water_supply_treatment_id: data12?.length != 0 ? data12[0]?.insertId ? data12[0]?.insertId : '' : '',
+                    year: year,
+                    totalwaterdischarge: treatedWater ? treatedWater : 0,
+                    treated_water: treatedWater,
+                    month: months[k],
+                    total_treatment_emissions: treatmentEmission
+                  });
+                }
+              }
+
+            }
+          }));
+        const water_supplytreatmentcategory1 = await insert_water_discharge_by_destination(array1);
+      }
+
+      console.log("totalWaterTreated", totalWaterTreated);
+      console.log("totalWithdrawnEmission", totalWithdrawnEmission);
+      console.log("totalTreatedEmission", totalTreatedEmission);
+
+      let emissiondata = '';
+      let waterTreated = 0;
+      let treatment_emission_factor_used = "";
+  
+
+      let non_water_treated = water_treatment - totalWaterTreated;
+      let totalEmissions = totalTreatedEmission + totalWithdrawnEmission;
+      if (insertId) {
+        for (let i = 0; i < insertId.length; i++) {
+          const waterpplyory1 = await updateWater_ef(totalEmissions,totalWithdrawnEmission,totalTreatedEmission, parseFloat(totalWaterTreated).toFixed(4), non_water_treated,totalWaterTreated, insertId[i]);
         }
         let where = ` where user_id =  '${user_id}' and facilities = '${facilities}'`;
         const water_supplytreatmentcategory1 = await getSelectedColumn("water_supply_treatment_category", where, "*");

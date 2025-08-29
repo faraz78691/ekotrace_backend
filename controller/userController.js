@@ -256,7 +256,7 @@ exports.login = async (req, res) => {
                 const roles = await getSelectedColumn(
                   "`dbo.aspnetuserroles` A ",
                   where,
-                  "A.facilityID,A.roleId,A.userId,B.Name"
+                  "A.facilityID,A.roleId,A.userId,B.Name,B.Id as role_id"
                 );
                 item.token = toke;
 
@@ -311,6 +311,7 @@ exports.login = async (req, res) => {
                 );
 
                 item.tenantID = item.Id;
+                item.role_id = roles[0]?.role_id;
               })
             );
 
@@ -1145,14 +1146,21 @@ exports.GetpendingDataEnteries = async (req, res) => {
             }
 
             if (item.product_category) {
-              let where = ` LEFT JOIN  purchase_goods_product_code B  ON B.id  = A.product_code_id where  	A.id = '${item.product_category}'  `;
+              let where = ` LEFT JOIN  purchase_goods_categories B  ON B.product_category  = A.id where  A.id = '${item.product_category}'  `;
               const typename = await getSelectedColumn(
                 "purchase_goods_categories_ef A",
                 where,
-                "A.*,B.code"
+                "A.HSN_code, A.NAIC_code, A.ISIC_code, A.product"
               );
+              console.log(typename);
               item.product_category_name = typename[0]?.product;
-              item.code_name = typename[0]?.code;
+              if(item.productcodestandard == "1"){
+                item.productCode = typename[0]?.HSN_code;
+              }else if(item.productcodestandard == "2"){
+                item.productCode = typename[0]?.NAIC_code;
+              }else if(item.productcodestandard == "3"){
+                item.productCode = typename[0]?.ISIC_code;
+              }
             }
 
             emissionFactor = item.emission_factor_used;
@@ -1462,9 +1470,11 @@ exports.GetpendingDataEnteriesFuelType = async (req, res) => {
 
       if (categoryID == "9") {
         let categorydata = await getCombustionEmissionFuel(facilities, year);
+        console.log("categorydata =>", categorydata);
         let categorydata1 = await getAllelectricity(facilities, year);
+        // console.log("categorydata1 =>", categorydata1);
         let categorydata2 = await getAllheatandsteam(facilities, year);
-
+        // console.log("categorydata2 =>", categorydata2);
         array = [...categorydata, ...categorydata1, ...categorydata2];
       }
 
@@ -1508,31 +1518,17 @@ exports.GetpendingDataEnteriesFuelType = async (req, res) => {
           }
 
           if (item.tablename == "stationarycombustionde") {
-            // item.emission = item.Scope3GHGEmission
-            // /
-            // if(item.CalorificValue)
-            // {
-
-            //     if(unit.toLowerCase() === "litres")
-            //     {
-
-            //       emissionFactor =  Number(item.CalorificValue)
-            //     }
-            //     else if(unit.toLowerCase()==="kg")
-            //     {
-            //       emissionFactor =  Number(item.CalorificValue)
-            //     }
-
+       
+            // if (unit.toLowerCase() === "kg") {
+            //   emissionFactor = item.scope3_kgCO2e_kg;
+            // } else if (unit.toLowerCase() === "litres") {
+            //   emissionFactor = item.scope3_kg_CO2e_litres;
+            // } else if (unit.toLowerCase() === "kwh") {
+            //   emissionFactor = item.scope3_kgCO2e_kwh;
+            // } else if (unit.toLowerCase() === "tonnes") {
+            //   emissionFactor = item.scope3_kgCO2e_tonnes;
             // }
-            if (unit.toLowerCase() === "kg") {
-              emissionFactor = item.scope3_kgCO2e_kg;
-            } else if (unit.toLowerCase() === "litres") {
-              emissionFactor = item.scope3_kg_CO2e_litres;
-            } else if (unit.toLowerCase() === "kwh") {
-              emissionFactor = item.scope3_kgCO2e_kwh;
-            } else if (unit.toLowerCase() === "tonnes") {
-              emissionFactor = item.scope3_kgCO2e_tonnes;
-            }
+            emissionFactor = item.Scope3GHGEmissionFactor;
           }
 
           if (item.tablename == "dbo.renewableelectricityde") {
@@ -1580,12 +1576,13 @@ exports.GetpendingDataEnteriesFuelType = async (req, res) => {
 
           if (item.tablename == "dbo.heatandsteamde") {
             // item.emission = item.scop3GHGEmission
-            let where = ` where  	subCatTypeID = '${item.typeID}'  `;
+            let where = ` where  	id = '${item.typeID}'  `;
             const heatandsteam = await getSelectedColumn(
               "`dbo.heatandsteam`",
               where,
               "*"
             );
+           
             item.TypeName = heatandsteam[0]["Item"]
               ? heatandsteam[0]["Item"]
               : "";
@@ -1820,7 +1817,7 @@ exports.deleteAllEntry = async (req, res) => {
             failedDeletes.push({ tableName, idValue });
           }
         } catch (err) {
-          console.log(`Error deleting from ${tableName}`, err);
+         
           failedDeletes.push({ tableName, idValue });
         }
       }

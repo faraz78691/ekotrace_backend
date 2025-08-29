@@ -45,5 +45,6 @@ router.get("/vehicleSubCategories_lease", auth, businesstravelController.vehicle
 router.get("/employeeCommunityCategory", auth, businesstravelController.employeeCommunityCategory);
 router.get("/employeeCommunitySubCategory/:category/:facility_id/:year", auth, businesstravelController.employeeCommunitySubCategory);
 router.post("/getcurrencyByfacilities", auth, businesstravelController.getcurrencyByfacilities);
+router.post("/UploadWaterSupplyDE", auth, businesstravelController.UploadWaterSupplyDE);
 
 module.exports = router;

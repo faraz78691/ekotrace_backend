@@ -11,7 +11,7 @@ module.exports = {
     pageSize,
     offset
   ) => {
-    return db.query(`select  'Purchase Goods' as category,        pgcef.product as Product, top.typesofpurchasename as Type_of_Purchase, pgc.unit, pgc.productcode,  dbu.tenantName as user_name, \
+    return db.query(`select  'Purchase Goods' as category,pgc.product_category,pgc.productcodestandard, pgcef.product as Product, top.typesofpurchasename as Type_of_Purchase, pgc.unit, pgc.productcode, dbu.tenantName as user_name, \
                      pgc.emission as Emission,  pgc.year as Years, pgc.month as Months, pgc.supplier as vendor, pgc.supplierspecificEF as vendor_ef, pgc.supplierunit as vendor_ef_unit, pgc.valuequantity as quantity \
                      from  purchase_goods_categories pgc,   \`dbo.typesofpurchase\`   top,  \`dbo.tenants\` dbu,  \
                      purchase_goods_categories_ef pgcef where  pgc.year =${year} and pgc.month in (${month}) and pgc.status ='S'  \

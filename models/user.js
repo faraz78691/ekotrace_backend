@@ -72,6 +72,7 @@ module.exports = {
               A.Unit AS unit,
               A.Status AS status,
               A.months AS month,
+              A.year AS year,
               A.GHGEmission AS emission,
               A.TypeName AS typeName,
               A.readingValue AS readingValue,

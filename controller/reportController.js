@@ -158,6 +158,7 @@ const {
 } = require("../models/report_multi _audit");
 
 const { getpassengervehicletypesById } = require("../models/scope1");
+const { getSelectedColumn } = require("../models/common");
 
 exports.reportFilterPurchaseGoods = async (req, res) => {
   try {
@@ -196,6 +197,24 @@ exports.reportFilterPurchaseGoods = async (req, res) => {
       pageSize,
       offset
     );
+    if (reportResult.length > 0) {
+      for (const i of reportResult) {
+        const getProductCode = await getSelectedColumn(
+          "purchase_goods_categories_ef",
+          `WHERE id = '${i.product_category}'`,
+          `HSN_code, NAIC_code, ISIC_code`
+        );
+       
+        if (i.productcodestandard == 1) {
+          i.productCode = getProductCode[0]?.HSN_code;
+        } else if (i.productcodestandard == 2) {
+          i.productCode = getProductCode[0]?.NAIC_code;
+        } else if (i.productcodestandard == 3) {
+          i.productCode = getProductCode[0]?.ISIC_code;
+        }
+      }
+    }
+  
     const [totalCount] = await getPurchaseGoodsReportCount(
       facility,
       year,
@@ -1086,7 +1105,7 @@ exports.reportEmployeeCommuting = async (req, res) => {
       "employee_commuting_category",
       "facilities"
     )
-    console.log(">>>>>>>>>>", totalCount);
+  
     const reportResult = await getEmployeeCommutingReport(
       user_id,
       facility,
@@ -1884,7 +1903,7 @@ exports.reportCompanyOwnedVehicles = async (req, res) => {
 
       for (elem of reportResult) {
         const itemRes = await getVehicle(elem.vehicleTypeID);
-        console.log(itemRes);
+      
         elem.vehicleName = itemRes[0].ItemType;
         elem.item = itemRes[0].item;
         reportCOVehicles.push(elem);
@@ -3145,7 +3164,7 @@ exports.reportFilterMultipleCategoryNew = async (req, res) => {
           //     multiReport.push(elem);
           multiReport.push(...reportResult);
         }
-        console.log(multiReport);
+
       } else {
         for (var year = Number(start_year); year <= Number(end_year); year++) {
           var months = "";
